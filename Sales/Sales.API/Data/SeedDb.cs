@@ -15,6 +15,19 @@ namespace Sales.API.Data
         {
             await _context.Database.EnsureCreatedAsync();
             await CheckCountriesAsync();
+            await CheckCategoriesAsync();
+        }
+
+        private async Task CheckCategoriesAsync()
+        {
+            if (!_context.Categories.Any())
+            {
+                _context.Categories.Add(new Category { Name = "Ropa" });
+                _context.Categories.Add(new Category { Name = "Tecnologia" });
+                _context.Categories.Add(new Category { Name = "Deportes" });
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         private async Task CheckCountriesAsync()
