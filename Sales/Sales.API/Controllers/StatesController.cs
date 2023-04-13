@@ -9,6 +9,8 @@ namespace Sales.API.Controllers
 {
     [ApiController]
     [Route("/api/states")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
     public class StatesController : ControllerBase
     {
         private readonly DataContext _context;
