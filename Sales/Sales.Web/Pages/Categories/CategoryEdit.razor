@@ -1,68 +1,66 @@
-﻿@page "/categories/edit/{Id:int}"
-@inject NavigationManager navigationManager
+﻿@page "/categories/edit/{CategoryId:int}"
 @inject IRepository repository
+@inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
+@attribute [Authorize(Roles = "Admin")]
 
-<h3>Editar Categoria</h3>
+<h3>Editar categoría</h3>
 
 @if (category is null)
 {
-    <div class="spinner"/>
+    <div class="spinner" />
 }
 else
 {
-    <CategoryForm @ref="categoryForm" Category="category" OnValidSubmit="Edit" ReturnAction="Return" />
+    <CategoryForm @ref="categoryForm" Category="category" OnValidSubmit="EditAsync" ReturnAction="Return" />
 }
 
 @code {
     private Category? category;
     private CategoryForm? categoryForm;
 
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
     [Parameter]
-    public int Id { get; set; }
+    public int CategoryId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var responseHTTP = await repository.Get<Category>($"api/categories/{Id}");
+        var responseHttp = await repository.Get<Category>($"/api/categories/{CategoryId}");
+        if (responseHttp.Error)
+        {
+            if (responseHttp.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/categories");
+                return;
+            }
 
-        if (responseHTTP.Error)
-        {
-            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                navigationManager.NavigateTo("categories");
-            }
-            else
-            {
-                var messageError = await responseHTTP.GetErrorMessageAsync();
-                await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
-            }
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
         }
-        else
-        {
-            category = responseHTTP.Response;
-        }
+
+        category = responseHttp.Response;
     }
 
-    private async Task Edit()
+    private async Task EditAsync()
     {
-        var responseHTTP = await repository.Put("api/categories", category);
+        var responseHttp = await repository.Put("/api/categories", category);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
 
-        if (responseHTTP.Error)
-        {
-            var mensajeError = await responseHTTP.GetErrorMessageAsync();
-            await sweetAlertService.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
-        }
-        else
-        {
-            categoryForm!.FormPostedSuccessfully = true;
-            navigationManager.NavigateTo("categories");
-        }
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+        Return();
     }
 
     private void Return()
     {
-        navigationManager.NavigateTo("categories");
+        categoryForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo($"/categories");
     }
 }
-
-
