@@ -2,73 +2,74 @@
 @inject IRepository repository
 @inject NavigationManager navigationManager
 @inject SweetAlertService sweetAlertService
-@attribute [Authorize(Roles = "Admin")]
 
-@if (categories is null)
+
+@if (Categories is null)
 {
     <div class="spinner" />
 }
 else
 {
-    <GenericList MyList="categories">
-        <Body>
-            <div class="card">
+    <GenericList MyList="Categories">
+        <Body>            
+             <div class="card">
                 <div class="card-header">
                     <span>
-                        <i class="oi oi-list"></i> Categorías
-                        <a class="btn btn-sm btn-primary float-end" @onclick=@(() => ShowModal())><i class="oi oi-plus"></i> Adicionar Categoría</a>
+                        <i class="oi oi-globe"></i> Categoria 
+                        <a class="btn btn-sm btn-primary float-end" href="/categories/create"><i class="oi oi-plus"></i> Adicionar Categoria</a>
                     </span>
                 </div>
                 <div class="card-body">
                     <div class="mb-2" style="display: flex; flex-wrap:wrap; align-items: center;">
                         <div>
-                            <input style="width: 400px;" type="text" class="form-control" id="titulo" placeholder="Buscar categoría..." @bind-value="Filter" />
+                            <input style="width: 400px;" type="text" class="form-control" id="titulo" placeholder="Buscar categoria..." @bind-value="Filter" />
                         </div>
                         <div class="mx-1">
                             <button type="button" class="btn btn-outline-primary" @onclick="ApplyFilterAsync"><i class="oi oi-layers" /> Filtrar</button>
                             <button type="button" class="btn btn-outline-danger" @onclick="CleanFilterAsync"><i class="oi oi-ban" /> Limpiar</button>
                         </div>
                     </div>
-
-                    <Pagination CurrentPage="currentPage"
-                            TotalPages="totalPages"
-                            SelectedPage="SelectedPageAsync" />
-
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Categoría</th>
-                                <th style="width:200px"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var category in categories)
-                            {
-                                <tr>
-                                    <td>
-                                        @category.Name
-                                    </td>
-                                    <td>
-                                        <a @onclick=@(() => ShowModal(category.Id, true)) class="btn btn-warning"><i class="oi oi-pencil" /> Editar</a>
-                                        <button class="btn btn-danger" @onclick=@(() => Delete(category.Id))><i class="oi oi-trash" /> Borrar</button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
                 </div>
-            </div>
+             </div>
+
+
+            <Pagination CurrentPage="currentPage"
+                    TotalPages="totalPages"
+                    SelectedPage="SelectedPage" />
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:220px"></th>
+                        <th style="width:260px">Categoria</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Categories!)
+                    {
+                        <tr>
+                            <td>                               
+                             <a href="/categories/details/@category.Id" class="btn btn-info btn-sm"><i class="oi oi-list" /> Detalles</a>
+                             <a href="/categories/edit/@category.Id" class="btn btn-warning btn-sm"><i class="oi oi-pencil" /> Editar</a>
+                             <button class="btn btn-danger btn-sm" @onclick=@(() => Delete(category))><i class="oi oi-trash" /> Borrar</button>
+                            </td>
+                            <td>
+                                @category.Name
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </Body>
+
     </GenericList>
 }
 
+
 @code {
-    public List<Category>? categories { get; set; }
+    public List<Category>? Categories { get; set; }
     private int currentPage = 1;
     private int totalPages;
-
-    [CascadingParameter]
-    IModalService Modal { get; set; } = default!;
 
     [Parameter]
     [SupplyParameterFromQuery]
@@ -83,28 +84,7 @@ else
         await LoadAsync();
     }
 
-    private async Task ShowModal(int id = 0, bool isEdit = false)
-    {
-        IModalReference modalReference;
-
-        if (isEdit)
-        {
-            modalReference = Modal.Show<CategoryEdit>(string.Empty, new ModalParameters().Add("CategoryId", id));
-        }
-        else
-        {
-            modalReference = Modal.Show<CategoryCreate>();
-        }
-
-        var result = await modalReference.Result;
-        if (result.Confirmed)
-        {
-            await LoadAsync();
-        }
-    }
-
-
-    private async Task SelectedPageAsync(int page)
+    private async Task SelectedPage(int page)
     {
         currentPage = page;
         await LoadAsync(page);
@@ -131,20 +111,15 @@ else
             url2 = $"api/categories/totalPages?filter={Filter}";
         }
 
-        try
-        {
-            var responseHppt = await repository.Get<List<Category>>(url1);
-            var responseHppt2 = await repository.Get<int>(url2);
-            categories = responseHppt.Response!;
-            totalPages = responseHppt2.Response!;
-        }
-        catch (Exception ex)
-        {
-            await sweetAlertService.FireAsync("Error", ex.Message, SweetAlertIcon.Error);
-        }
+
+        var responseHppt = await repository.Get<List<Category>>(url1);
+        var responseHppt2 = await repository.Get<int>(url2);
+        Categories = responseHppt.Response!;
+        totalPages = responseHppt2.Response!;
     }
 
-    private async Task Delete(int categoryId)
+
+    private async Task Delete(Category category)
     {
         var result = await sweetAlertService.FireAsync(new SweetAlertOptions
             {
@@ -161,7 +136,7 @@ else
             return;
         }
 
-        var responseHTTP = await repository.Delete($"api/categories/{categoryId}");
+        var responseHTTP = await repository.Delete($"api/categories/{category.Id}");
 
         if (responseHTTP.Error)
         {
@@ -191,6 +166,8 @@ else
     {
         int page = 1;
         await LoadAsync(page);
-        await SelectedPageAsync(page);
+        await SelectedPage(page);
     }
+
+
 }

@@ -4,7 +4,9 @@
 {
     @if (Loading is null)
     {
-        <div class="spinner" />
+        <div class="align-items-center">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif?20151024034921" />
+        </div>
     }
     else
     {
@@ -15,9 +17,7 @@ else if (MyList.Count == 0)
 {
     @if (NoRecords is null)
     {
-        <div class="align-items-center">
-            <p>No hay registros para mostrar.</p>
-        </div>
+        <p>No hay registros para mostrar...</p>
     }
     else
     {
