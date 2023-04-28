@@ -109,7 +109,7 @@ namespace Sales.API.Controllers
             {
                 if (dbUpdateException.InnerException!.Message.Contains("duplicate"))
                 {
-                    return BadRequest("Ya existe un producto con el mismo nombre.");
+                    return BadRequest("Ya existe una ciudad con el mismo nombre.");
                 }
 
                 return BadRequest(dbUpdateException.Message);
@@ -119,6 +119,7 @@ namespace Sales.API.Controllers
                 return BadRequest(exception.Message);
             }
         }
+
 
         [HttpPut]
         public async Task<ActionResult> PutAsync(Product product)
